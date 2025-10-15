@@ -1,0 +1,787 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Security - Detailed Logs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="static/styles.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+            color: #1e293b;
+        }
+
+        .log-details-container {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid rgba(30, 41, 59, 0.15);
+            box-shadow: 0 12px 40px rgba(30, 41, 59, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .log-entry-detailed {
+            transition: all 0.3s ease;
+            background: rgba(248, 250, 252, 0.8);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .log-entry-detailed:hover {
+            background: rgba(241, 245, 249, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .severity-high {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 15%);
+        }
+
+        .severity-medium {
+            border-left: 4px solid #ea580c;
+            background: linear-gradient(90deg, rgba(234, 88, 12, 0.1) 0%, transparent 15%);
+        }
+
+        .severity-low {
+            border-left: 4px solid #2563eb;
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.1) 0%, transparent 15%);
+        }
+
+        .severity-normal {
+            border-left: 4px solid #059669;
+            background: linear-gradient(90deg, rgba(5, 150, 105, 0.1) 0%, transparent 15%);
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.6);
+        }
+
+        .filter-section {
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .log-modal {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .log-modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-slate-700 mb-2">🔍 Detailed Log Analysis</h1>
+                    <p class="text-slate-600">Comprehensive view of all system logs and security events</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                        ← Back to Dashboard
+                    </button>
+                    <button onclick="filterCameraLogs()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                        📹 Camera Logs Only
+                    </button>
+                    <button onclick="exportLogs()" class="export-button">
+                        📥 Export Logs
+                    </button>
+                    <button onclick="refreshLogs()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-blue-600" id="total-logs-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">Total Log Entries</div>
+            </div>
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-red-600" id="high-severity-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">High Severity</div>
+            </div>
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-orange-600" id="medium-severity-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">Medium Severity</div>
+            </div>
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-green-600" id="normal-logs-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">Normal Activity</div>
+            </div>
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-purple-600" id="unique-devices-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">Unique Devices</div>
+            </div>
+            <div class="stat-item">
+                <div class="text-3xl font-bold text-indigo-600" id="attack-types-stat">0</div>
+                <div class="text-sm text-slate-600 mt-1">Attack Types</div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="filter-section">
+            <h3 class="text-lg font-semibold text-slate-700 mb-4">🔧 Advanced Filters</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Device Filter</label>
+                    <select id="device-filter-detailed" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                        <option value="all">All Devices</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Severity Level</label>
+                    <select id="severity-filter-detailed" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                        <option value="all">All Severities</option>
+                        <option value="high">High Severity</option>
+                        <option value="medium">Medium Severity</option>
+                        <option value="low">Low Severity</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Attack Type</label>
+                    <select id="attack-filter-detailed" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                        <option value="all">All Attack Types</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Time Range</label>
+                    <select id="time-filter-detailed" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                        <option value="all">All Time</option>
+                        <option value="1h">Last Hour</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <input type="text" id="search-logs-detailed" placeholder="Search logs by message content..." 
+                       class="flex-1 p-3 border border-slate-300 rounded-lg bg-white">
+                <button onclick="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300">
+                    Apply Filters
+                </button>
+                <button onclick="clearFilters()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="log-details-container rounded-2xl overflow-hidden">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-slate-700">Log Entries</h3>
+                    <span id="filtered-count" class="text-sm text-slate-600">Showing 0 entries</span>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto" style="max-height: 600px; overflow-y: auto;">
+                <table class="min-w-full">
+                    <thead class="bg-slate-100 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-200" onclick="sortLogs('timestamp')">
+                                Timestamp ↕️
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-200" onclick="sortLogs('device')">
+                                Device ↕️
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-200" onclick="sortLogs('protocol')">
+                                Protocol ↕️
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                Source IP
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                Attack Type
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                Message
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-200" onclick="sortLogs('severity')">
+                                Severity ↕️
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailed-log-entries" class="bg-white divide-y divide-slate-200">
+                        <!-- Log entries will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-between items-center">
+            <div class="text-sm text-slate-600">
+                Showing <span id="start-entry">0</span> to <span id="end-entry">0</span> of <span id="total-entries">0</span> entries
+            </div>
+            <div class="flex gap-2">
+                <button onclick="previousPage()" id="prev-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 disabled:opacity-50" disabled>
+                    Previous
+                </button>
+                <span id="page-info" class="px-4 py-2 text-slate-600">Page 1 of 1</span>
+                <button onclick="nextPage()" id="next-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 disabled:opacity-50" disabled>
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Detail Modal -->
+    <div id="log-detail-modal" class="fixed inset-0 log-modal flex items-center justify-center hidden z-50">
+        <div class="log-modal-content p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-semibold text-slate-700">📋 Log Entry Details</h3>
+                <button onclick="closeLogModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <div id="log-detail-content">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLogs = [];
+        let filteredLogs = [];
+        let currentPage = 1;
+        const logsPerPage = 50;
+        let sortColumn = 'timestamp';
+        let sortDirection = 'desc';
+
+        // Load logs from the parent window or API
+        async function loadLogs() {
+            try {
+                // Try to get logs from parent window first
+                if (window.opener && window.opener.db && window.opener.db.logs) {
+                    allLogs = [...window.opener.db.logs];
+                } else {
+                    // Fallback to API or create sample data
+                    allLogs = generateSampleLogs();
+                }
+
+                filteredLogs = [...allLogs];
+                updateFilterOptions();
+                updateStatistics();
+                displayLogs();
+                updatePagination();
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                allLogs = generateSampleLogs();
+                filteredLogs = [...allLogs];
+                updateFilterOptions();
+                updateStatistics();
+                displayLogs();
+                updatePagination();
+            }
+        }
+
+        function generateSampleLogs() {
+            const devices = ["Traffic Camera", "Environmental Sensor", "Smart Streetlight", "Surveillance Camera", "Traffic Signal"];
+            const cameraDevices = ["Traffic Camera", "Surveillance Camera"];
+            const attackTypes = ["DDoS", "DoS", "Data Exfiltration", "Brute Force", "SQL Injection", "Port Scanning"];
+            const cameraEvents = ["Motion Detected", "Unauthorized Access", "Perimeter Breach", "Loitering Detected", "Vehicle Analysis", "Face Recognition", "License Plate Scan"];
+            const protocols = ["MQTT", "CoAP", "HTTP", "AMQP", "LoRaWAN", "RTSP"];
+            const logs = [];
+
+            // Generate 50% camera logs
+            for (let i = 0; i < 200; i++) {
+                const isCamera = i < 100; // First 100 are camera logs
+                const severity = Math.random() > 0.7 ? 
+                    (Math.random() > 0.5 ? "high" : "medium") : 
+                    (Math.random() > 0.8 ? "low" : "normal");
+
+                const device = isCamera ? 
+                    cameraDevices[Math.floor(Math.random() * cameraDevices.length)] : 
+                    devices[Math.floor(Math.random() * devices.length)];
+
+                const eventType = isCamera ? 
+                    (severity === 'normal' ? 'Normal Operation' : cameraEvents[Math.floor(Math.random() * cameraEvents.length)]) :
+                    (severity === 'normal' ? 'Normal' : attackTypes[Math.floor(Math.random() * attackTypes.length)]);
+
+                const message = isCamera ?
+                    `Camera ${i + 1}: ${eventType} - ${severity === 'normal' ? 'Normal monitoring active' : 'Security event detected in camera feed'}` :
+                    `Log entry ${i + 1}: ${severity === 'normal' ? 'Normal system operation' : 'Security event detected'}`;
+
+                logs.push({
+                    id: i + 1,
+                    timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 3600000),
+                    device: device,
+                    protocol: isCamera ? "RTSP/HTTP" : protocols[Math.floor(Math.random() * protocols.length)],
+                    sourceIP: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                    attackType: eventType,
+                    message: message,
+                    severity: severity,
+                    isCamera: isCamera,
+                    details: {
+                        duration: Math.floor(Math.random() * 300) + 'ms',
+                        user_agent: isCamera ? 'Camera Agent v2.0' : 'IoT Device Agent v1.0',
+                        payload_size: Math.floor(Math.random() * 1024) + 'KB',
+                        response_code: severity === 'normal' ? 200 : (Math.random() > 0.5 ? 401 : 500),
+                        camera_id: isCamera ? `cam_${Math.floor(Math.random() * 10) + 1}` : null,
+                        location: isCamera ? ['Main Entrance', 'Parking Lot', 'Lobby', 'Warehouse', 'Perimeter'][Math.floor(Math.random() * 5)] : null
+                    }
+                });
+            }
+
+            return logs.sort((a, b) => b.timestamp - a.timestamp);
+        }
+
+        function updateFilterOptions() {
+            // Update device filter
+            const deviceFilter = document.getElementById('device-filter-detailed');
+            const devices = [...new Set(allLogs.map(log => log.device))];
+            deviceFilter.innerHTML = '<option value="all">All Devices</option>';
+            devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device;
+                option.textContent = device;
+                deviceFilter.appendChild(option);
+            });
+
+            // Update attack type filter
+            const attackFilter = document.getElementById('attack-filter-detailed');
+            const attackTypes = [...new Set(allLogs.map(log => log.attackType))];
+            attackFilter.innerHTML = '<option value="all">All Attack Types</option>';
+            attackTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                attackFilter.appendChild(option);
+            });
+        }
+
+        function updateStatistics() {
+            const totalLogs = allLogs.length;
+            const highSeverity = allLogs.filter(log => log.severity === 'high').length;
+            const mediumSeverity = allLogs.filter(log => log.severity === 'medium').length;
+            const normalLogs = allLogs.filter(log => log.severity === 'normal').length;
+            const uniqueDevices = new Set(allLogs.map(log => log.device)).size;
+            const attackTypes = new Set(allLogs.filter(log => log.attackType !== 'Normal').map(log => log.attackType)).size;
+
+            document.getElementById('total-logs-stat').textContent = totalLogs;
+            document.getElementById('high-severity-stat').textContent = highSeverity;
+            document.getElementById('medium-severity-stat').textContent = mediumSeverity;
+            document.getElementById('normal-logs-stat').textContent = normalLogs;
+            document.getElementById('unique-devices-stat').textContent = uniqueDevices;
+            document.getElementById('attack-types-stat').textContent = attackTypes;
+        }
+
+        function applyFilters() {
+            const deviceFilter = document.getElementById('device-filter-detailed').value;
+            const severityFilter = document.getElementById('severity-filter-detailed').value;
+            const attackFilter = document.getElementById('attack-filter-detailed').value;
+            const timeFilter = document.getElementById('time-filter-detailed').value;
+            const searchQuery = document.getElementById('search-logs-detailed').value.toLowerCase();
+
+            filteredLogs = allLogs.filter(log => {
+                let matches = true;
+
+                if (deviceFilter !== 'all' && log.device !== deviceFilter) {
+                    matches = false;
+                }
+
+                if (severityFilter !== 'all' && log.severity !== severityFilter) {
+                    matches = false;
+                }
+
+                if (attackFilter !== 'all' && log.attackType !== attackFilter) {
+                    matches = false;
+                }
+
+                if (timeFilter !== 'all') {
+                    const now = new Date();
+                    const logTime = new Date(log.timestamp);
+                    const timeDiff = now - logTime;
+
+                    switch (timeFilter) {
+                        case '1h':
+                            if (timeDiff > 3600000) matches = false;
+                            break;
+                        case '24h':
+                            if (timeDiff > 86400000) matches = false;
+                            break;
+                        case '7d':
+                            if (timeDiff > 604800000) matches = false;
+                            break;
+                        case '30d':
+                            if (timeDiff > 2592000000) matches = false;
+                            break;
+                    }
+                }
+
+                if (searchQuery && !log.message.toLowerCase().includes(searchQuery)) {
+                    matches = false;
+                }
+
+                return matches;
+            });
+
+            currentPage = 1;
+            displayLogs();
+            updatePagination();
+        }
+
+        function clearFilters() {
+            document.getElementById('device-filter-detailed').value = 'all';
+            document.getElementById('severity-filter-detailed').value = 'all';
+            document.getElementById('attack-filter-detailed').value = 'all';
+            document.getElementById('time-filter-detailed').value = 'all';
+            document.getElementById('search-logs-detailed').value = '';
+
+            filteredLogs = [...allLogs];
+            currentPage = 1;
+            displayLogs();
+            updatePagination();
+        }
+
+        function filterCameraLogs() {
+            // Filter to show only camera logs
+            filteredLogs = allLogs.filter(log => log.isCamera === true);
+            currentPage = 1;
+            displayLogs();
+            updatePagination();
+            updateCameraStatistics();
+            
+            // Update UI to show camera filter is active
+            document.getElementById('filtered-count').innerHTML = `Showing ${filteredLogs.length} camera log entries <span class="text-purple-600 font-semibold">(Camera Filter Active)</span>`;
+        }
+
+        function updateCameraStatistics() {
+            const cameraLogs = allLogs.filter(log => log.isCamera === true);
+            const totalCameraLogs = cameraLogs.length;
+            const highSeverityCameras = cameraLogs.filter(log => log.severity === 'high').length;
+            const mediumSeverityCameras = cameraLogs.filter(log => log.severity === 'medium').length;
+            const normalCameras = cameraLogs.filter(log => log.severity === 'normal').length;
+            const uniqueCameras = new Set(cameraLogs.map(log => log.details?.camera_id).filter(id => id)).size;
+            const cameraLocations = new Set(cameraLogs.map(log => log.details?.location).filter(loc => loc)).size;
+
+            // Update statistics if showing camera logs only
+            if (filteredLogs.every(log => log.isCamera)) {
+                document.getElementById('total-logs-stat').textContent = totalCameraLogs;
+                document.getElementById('high-severity-stat').textContent = highSeverityCameras;
+                document.getElementById('medium-severity-stat').textContent = mediumSeverityCameras;
+                document.getElementById('normal-logs-stat').textContent = normalCameras;
+                document.getElementById('unique-devices-stat').textContent = uniqueCameras;
+                document.getElementById('attack-types-stat').textContent = cameraLocations;
+                
+                // Update labels for camera context
+                document.querySelector('#unique-devices-stat').nextElementSibling.textContent = 'Camera IDs';
+                document.querySelector('#attack-types-stat').nextElementSibling.textContent = 'Locations';
+            }
+        }
+
+        function sortLogs(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+
+            filteredLogs.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (column === 'timestamp') {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                }
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            displayLogs();
+        }
+
+        function displayLogs() {
+            const tbody = document.getElementById('detailed-log-entries');
+            const start = (currentPage - 1) * logsPerPage;
+            const end = start + logsPerPage;
+            const logsToShow = filteredLogs.slice(start, end);
+
+            tbody.innerHTML = '';
+
+            logsToShow.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = `log-entry-detailed severity-${log.severity} hover:bg-slate-50`;
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                        ${new Date(log.timestamp).toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                        ${log.device}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                            ${log.protocol}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-mono">
+                        ${log.sourceIP}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                        <span class="px-2 py-1 ${log.attackType === 'Normal' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-full text-xs font-medium">
+                            ${log.attackType}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">
+                        ${log.message}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full ${getSeverityClass(log.severity)}">
+                            ${log.severity.charAt(0).toUpperCase() + log.severity.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewLogDetails(${log.id})" class="text-blue-600 hover:text-blue-900 font-medium">
+                            View Details
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('filtered-count').textContent = `Showing ${filteredLogs.length} entries`;
+        }
+
+        function getSeverityClass(severity) {
+            const classes = {
+                'high': 'bg-red-100 text-red-800',
+                'medium': 'bg-orange-100 text-orange-800',
+                'low': 'bg-blue-100 text-blue-800',
+                'normal': 'bg-green-100 text-green-800'
+            };
+            return classes[severity] || 'bg-gray-100 text-gray-800';
+        }
+
+        function viewLogDetails(logId) {
+            const log = allLogs.find(l => l.id === logId);
+            if (!log) return;
+
+            const modalContent = document.getElementById('log-detail-content');
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Timestamp</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    ${new Date(log.timestamp).toLocaleString()}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Device</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    ${log.device}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Protocol</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    ${log.protocol}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Source IP</label>
+                                <div class="p-3 bg-slate-50 rounded-lg font-mono">
+                                    ${log.sourceIP}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Attack Type</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    <span class="px-2 py-1 ${log.attackType === 'Normal' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-full text-xs font-medium">
+                                        ${log.attackType}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Severity</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full ${getSeverityClass(log.severity)}">
+                                        ${log.severity.charAt(0).toUpperCase() + log.severity.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Response Code</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    ${log.details?.response_code || 'N/A'}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Duration</label>
+                                <div class="p-3 bg-slate-50 rounded-lg">
+                                    ${log.details?.duration || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
+                        <div class="p-4 bg-slate-50 rounded-lg">
+                            ${log.message}
+                        </div>
+                    </div>
+                    ${log.isCamera ? `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Camera ID</label>
+                            <div class="p-3 bg-slate-50 rounded-lg font-mono">
+                                ${log.details?.camera_id || 'N/A'}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Location</label>
+                            <div class="p-3 bg-slate-50 rounded-lg">
+                                📍 ${log.details?.location || 'Unknown'}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Additional Details</label>
+                        <div class="p-4 bg-slate-50 rounded-lg">
+                            <pre class="text-sm text-slate-600 whitespace-pre-wrap">${JSON.stringify(log.details, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('log-detail-modal').classList.remove('hidden');
+        }
+
+        function closeLogModal() {
+            document.getElementById('log-detail-modal').classList.add('hidden');
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+            const start = (currentPage - 1) * logsPerPage + 1;
+            const end = Math.min(currentPage * logsPerPage, filteredLogs.length);
+
+            document.getElementById('start-entry').textContent = start;
+            document.getElementById('end-entry').textContent = end;
+            document.getElementById('total-entries').textContent = filteredLogs.length;
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = currentPage === totalPages;
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayLogs();
+                updatePagination();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayLogs();
+                updatePagination();
+            }
+        }
+
+        function refreshLogs() {
+            loadLogs();
+        }
+
+        function exportLogs() {
+            const dataStr = JSON.stringify(filteredLogs, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `security_logs_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLogs();
+
+            // Add event listeners for filters
+            document.getElementById('device-filter-detailed').addEventListener('change', applyFilters);
+            document.getElementById('severity-filter-detailed').addEventListener('change', applyFilters);
+            document.getElementById('attack-filter-detailed').addEventListener('change', applyFilters);
+            document.getElementById('time-filter-detailed').addEventListener('change', applyFilters);
+            
+            // Add search functionality
+            let searchTimeout;
+            document.getElementById('search-logs-detailed').addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 500);
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('log-detail-modal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeLogModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

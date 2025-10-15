@@ -1,0 +1,110 @@
+# Core web framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Database
+# sqlite3
+
+# Machine Learning & Data Analysis
+scikit-learn==1.3.0
+numpy==1.24.3
+pandas==2.0.3
+
+# Data Visualization
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# Natural Language Processing
+nltk==3.8.1
+
+# Template engine
+Jinja2==3.1.2
+
+# JSON handling
+jsonschema==4.17.3
+
+# Networking
+requests==2.31.0
+websocket-client==1.6.1
+
+# Date/Time handling
+python-dateutil==2.8.2
+
+# Logging
+colorlog==6.7.0
+
+# Threading and async
+asyncio
+
+# System utilities
+psutil==5.9.5
+
+# Development tools
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# Security
+cryptography==41.0.3
+
+# IoT Protocol support (optional)
+paho-mqtt==1.6.1
+
+# Additional utilities
+tqdm==4.65.0
+colorlog
+cryptography
+flask
+flask-cors
+matplotlib
+nltk
+numpy
+paho-mqtt
+pandas
+psutil
+pytest
+pytest-cov
+python-dateutil
+requests
+scikit-learn
+seaborn
+tqdm
+websocket-client
+colorlog
+cryptography
+flask
+flask-cors
+jsonschema
+matplotlib
+nltk
+numpy
+paho-mqtt
+pandas
+psutil
+pytest
+pytest-cov
+python-dateutil
+requests
+scikit-learn
+seaborn
+tqdm
+websocket-client
+colorlog
+cryptography
+flask
+flask-cors
+jsonschema
+matplotlib
+nltk
+numpy
+paho-mqtt
+pandas
+psutil
+pytest
+pytest-cov
+python-dateutil
+requests
+scikit-learn
+seaborn
+tqdm
+websocket-client
+opencv-python

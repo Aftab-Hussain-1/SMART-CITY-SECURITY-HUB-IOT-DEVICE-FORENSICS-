@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Security</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="static/styles.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --primary-blue: #2563eb;
+            --primary-purple: #7c3aed;
+            --success-green: #059669;
+            --danger-red: #dc2626;
+            --warning-orange: #ea580c;
+            --dark-bg: #1e293b;
+            --light-bg: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border-light: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+            color: var(--text-dark);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid rgba(30, 41, 59, 0.15);
+            box-shadow: 0 12px 40px rgba(30, 41, 59, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .glow-effect {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .glow-effect:hover {
+            transform: translateY(-2px);
+        }
+
+        .log-entry {
+            transition: all 0.3s ease;
+            background: rgba(45, 55, 72, 0.6);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .log-entry:hover {
+            background: rgba(45, 55, 72, 0.9);
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .anomaly {
+            border-left: 4px solid var(--danger-color);
+            background: linear-gradient(90deg, rgba(245, 101, 101, 0.15) 0%, transparent 15%);
+            position: relative;
+        }
+
+        .anomaly::after {
+            content: '⚠️';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .normal {
+            border-left: 4px solid var(--success-color);
+            background: linear-gradient(90deg, rgba(72, 187, 120, 0.15) 0%, transparent 15%);
+            position: relative;
+        }
+
+        .normal::after {
+            content: '✅';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .scrollable-table {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 12px;
+            background: rgba(30, 33, 57, 0.6);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.6);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #e2e8f0;
+            color: #2d3748;
+            border-radius: 12px;
+            padding: 14px 18px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3182ce;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, 
+                rgba(30, 33, 57, 0.9) 0%, 
+                rgba(45, 55, 72, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 28px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, 
+                var(--secondary-bg) 0%, 
+                var(--accent-bg) 50%,
+                var(--secondary-bg) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .modal-backdrop {
+            background: rgba(10, 14, 26, 0.9);
+        }
+
+        .title-glow {
+            /* No effects */
+        }
+
+        .floating {
+            /* No animation */
+        }
+
+        .severity-high {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border: 1px solid #fecaca;
+        }
+
+        .severity-medium {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            color: white;
+            border: 1px solid #fed7aa;
+        }
+
+        .severity-low {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: 1px solid #bfdbfe;
+        }
+
+        .severity-normal {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Container -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen p-4 particle-bg">
+        <div class="w-full max-w-md glass-card rounded-2xl p-8 animate-fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold gradient-text" data-text="Smart City Security">Smart City Security</h2>
+                <p class="text-slate-600 mt-3 text-lg">Advanced Urban Monitoring Platform</p>
+                <div class="w-16 h-1 bg-gradient-to-r from-purple-400 to-blue-400 mx-auto mt-4 rounded-full"></div>
+            </div>
+
+            <div id="login-form">
+                <div class="mb-6">
+                    <label class="block text-slate-600 text-sm font-medium mb-3" for="login-email">
+                        Email Address
+                    </label>
+                    <input class="input-field w-full" id="login-email" type="email" placeholder="Enter your email">
+                </div>
+                <div class="mb-8">
+                    <label class="block text-slate-600 text-sm font-medium mb-3" for="login-password">
+                        Password
+                    </label>
+                    <input class="input-field w-full" id="login-password" type="password" placeholder="Enter your password">
+                </div>
+                <button id="login-btn" onclick="handleLogin()" class="w-full mb-6 bg-gradient-to-r from-blue-700 to-purple-700 hover:from-blue-800 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl border-2 border-blue-400">
+                    🔐 Sign In
+                </button>
+                <p class="text-center text-gray-400 text-sm">
+                    Don't have an account? <button id="show-signup" class="text-blue-400 hover:text-blue-300 font-medium">Create Account</button>
+                </p>
+            </div>
+
+            <div id="signup-form" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-medium mb-3" for="signup-name">
+                        Full Name
+                    </label>
+                    <input class="input-field w-full" id="signup-name" type="text" placeholder="Enter your full name">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-medium mb-3" for="signup-email">
+                        Email Address
+                    </label>
+                    <input class="input-field w-full" id="signup-email" type="email" placeholder="Enter your email">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-medium mb-3" for="signup-password">
+                        Password
+                    </label>
+                    <input class="input-field w-full" id="signup-password" type="password" placeholder="Create a password">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm font-medium mb-3" for="signup-confirm">
+                        Confirm Password
+                    </label>
+                    <input class="input-field w-full" id="signup-confirm" type="password" placeholder="Confirm your password">
+                </div>
+                <button id="signup-btn" class="w-full mb-6 bg-gradient-to-r from-green-700 to-teal-700 hover:from-green-800 hover:to-teal-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl border-2 border-green-400">
+                    📝 Create Account
+                </button>
+                <p class="text-center text-gray-400 text-sm">
+                    Already have an account? <button id="show-login" class="text-blue-400 hover:text-blue-300 font-medium">Sign In</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="hidden">
+        <!-- Header -->
+        <header class="header-gradient shadow-xl">
+            <div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+                <div class="flex items-center space-x-6">
+                    <h1 class="text-3xl font-bold gradient-text title-glow" data-text="Smart City Security">Smart City Security</h1>
+                    <span class="px-4 py-2 bg-green-500/20 text-green-400 text-sm rounded-full border border-green-500/30 status-online animate-pulse-glow">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                        Live Monitoring Active
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="generate-report" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        📊 Generate Report
+                    </button>
+                    <button id="logout-btn" class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        🚪 Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Dashboard Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                <div class="stat-card cyber-border floating">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Total Log Entries</h3>
+                            <p id="total-logs" class="text-4xl font-bold text-blue-400 text-shadow-glow">0</p>
+                            <p class="text-sm text-gray-500 mt-2">↗️ +12% from last hour</p>
+                        </div>
+                        <div class="text-5xl animate-pulse-glow">📊</div>
+                    </div>
+                </div>
+                <div class="stat-card cyber-border floating" style="animation-delay: 0.2s;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Security Alerts</h3>
+                            <p id="anomalies" class="text-4xl font-bold text-red-400 text-shadow-glow">0</p>
+                            <p class="text-sm text-gray-500 mt-2">⚠️ Requires attention</p>
+                        </div>
+                        <div class="text-5xl animate-pulse-glow">🚨</div>
+                    </div>
+                </div>
+                <div class="stat-card cyber-border floating" style="animation-delay: 0.4s;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-300 mb-3">Active Devices</h3>
+                            <p id="devices-count" class="text-4xl font-bold text-green-400 text-shadow-glow">0</p>
+                            <p class="text-sm text-gray-500 mt-2">✅ All systems online</p>
+                        </div>
+                        <div class="text-5xl animate-pulse-glow">🔗</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6 cyber-border">
+                    <h3 class="text-xl font-semibold text-gray-200 mb-6 flex items-center">
+                        📈 Log Activity Timeline
+                    </h3>
+                    <canvas id="timeline-chart" height="200"></canvas>
+                </div>
+                <div class="glass-card rounded-2xl p-6 cyber-border">
+                    <h3 class="text-xl font-semibold text-gray-200 mb-6 flex items-center">
+                        🎯 Anomaly Distribution
+                    </h3>
+                    <canvas id="anomaly-chart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Device Management Section with Tabs -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-8">
+                <div class="px-8 py-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-700 flex items-center mb-2">
+                                🚀 Smart Device Hub
+                            </h3>
+                            <p class="text-slate-600 text-sm">Monitor and control all connected IoT devices and sensors</p>
+                        </div>
+                        <div id="monitoring-status" class="text-right">
+                            <span class="status-indicator status-offline">🔴 Monitoring Stopped</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="bg-slate-50 border-b border-slate-200">
+                    <nav class="flex space-x-8 px-8" aria-label="Tabs">
+                        <button onclick="switchDeviceTab('overview')" 
+                                id="tab-overview" 
+                                class="device-tab active-tab py-4 px-1 border-b-2 font-medium text-sm">
+                            📊 Overview
+                        </button>
+                        <button onclick="switchDeviceTab('sensors')" 
+                                id="tab-sensors" 
+                                class="device-tab py-4 px-1 border-b-2 font-medium text-sm">
+                            🌡️ Sensors
+                        </button>
+                        <button onclick="switchDeviceTab('cameras')" 
+                                id="tab-cameras" 
+                                class="device-tab py-4 px-1 border-b-2 font-medium text-sm">
+                            📹 Cameras
+                        </button>
+                        <button onclick="switchDeviceTab('controls')" 
+                                id="tab-controls" 
+                                class="device-tab py-4 px-1 border-b-2 font-medium text-sm">
+                            🎮 Controls
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-8">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab-content" class="tab-content">
+                        <div class="mb-6">
+                            <h4 class="text-xl font-semibold text-slate-700 mb-4 flex items-center">
+                                📱 All Deployed Devices
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="device-status-grid">
+                                <!-- Device status cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="total-devices-count">0</div>
+                                <div class="text-sm text-slate-600">Total Devices</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-green-600" id="online-devices-count">0</div>
+                                <div class="text-sm text-slate-600">Online</div>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-red-600" id="offline-devices-count">0</div>
+                                <div class="text-sm text-slate-600">Offline</div>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-yellow-600" id="alerts-count">0</div>
+                                <div class="text-sm text-slate-600">Alerts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensors Tab -->
+                    <div id="sensors-tab-content" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="text-xl font-semibold text-slate-700 flex items-center">
+                                🌡️ IoT Sensors Management
+                            </h4>
+                            <div class="flex gap-3">
+                                <button onclick="sensorManager.showAddSensorModal()" 
+                                        class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    + Add Sensor
+                                </button>
+                                <button onclick="sensorManager.refreshSensors()" 
+                                        class="bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="sensor-grid">
+                            <!-- Sensor cards will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Cameras Tab -->
+                    <div id="cameras-tab-content" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="text-xl font-semibold text-slate-700 flex items-center">
+                                📹 Camera Surveillance System
+                            </h4>
+                            <div class="flex gap-3">
+                                <button onclick="cameraManager.showAddCameraModal()" 
+                                        class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    + Add Camera
+                                </button>
+                                <button onclick="cameraManager.startMonitoring()" 
+                                        class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    ▶️ Start Monitor
+                                </button>
+                                <button onclick="cameraManager.stopMonitoring()" 
+                                        class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    ⏹️ Stop Monitor
+                                </button>
+                            </div>
+                        </div>
+                        <div id="camera-list" class="space-y-4">
+                            <!-- Camera cards will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Controls Tab -->
+                    <div id="controls-tab-content" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h4 class="text-xl font-semibold text-slate-700 mb-4 flex items-center">
+                                🎮 System Controls & Management
+                            </h4>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+                            <button onclick="sensorManager.showAddSensorModal()" 
+                                    class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🌡️</div>
+                                <div class="text-sm font-semibold">Add Sensor</div>
+                            </button>
+                            <button onclick="cameraManager.showAddCameraModal()" 
+                                    class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📹</div>
+                                <div class="text-sm font-semibold">Add Camera</div>
+                            </button>
+                            <button onclick="cameraManager.startMonitoring()" 
+                                    class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">▶️</div>
+                                <div class="text-sm font-semibold">Start Monitor</div>
+                            </button>
+                            <button onclick="cameraManager.stopMonitoring()" 
+                                    class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">⏹️</div>
+                                <div class="text-sm font-semibold">Stop Monitor</div>
+                            </button>
+                            <button onclick="sensorManager.refreshSensors()" 
+                                    class="bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🔄</div>
+                                <div class="text-sm font-semibold">Refresh All</div>
+                            </button>
+                            <button onclick="showDeviceOverview()" 
+                                    class="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📊</div>
+                                <div class="text-sm font-semibold">Overview</div>
+                            </button>
+                            <button onclick="exportDeviceData()" 
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">📤</div>
+                                <div class="text-sm font-semibold">Export Data</div>
+                            </button>
+                            <button onclick="systemHealthCheck()" 
+                                    class="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
+                                <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🏥</div>
+                                <div class="text-sm font-semibold">Health Check</div>
+                            </button>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-lg p-6">
+                            <h5 class="text-lg font-semibold text-slate-700 mb-3">Quick Actions</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4 border border-slate-200">
+                                    <h6 class="font-medium text-slate-700 mb-2">Bulk Operations</h6>
+                                    <p class="text-sm text-slate-600 mb-3">Perform actions on multiple devices</p>
+                                    <button onclick="bulkDeviceOperation()" class="btn btn-secondary text-sm">Bulk Control</button>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 border border-slate-200">
+                                    <h6 class="font-medium text-slate-700 mb-2">System Maintenance</h6>
+                                    <p class="text-sm text-slate-600 mb-3">Schedule maintenance tasks</p>
+                                    <button onclick="scheduleMaintenance()" class="btn btn-secondary text-sm">Schedule</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Analysis Section -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-8">
+                <div class="px-6 py-6 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-slate-700 flex items-center">
+                        🔍 IoT Device Logs Analysis
+                    </h3>
+                    <button onclick="openDetailedLogs()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        📊 View Detailed Logs
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-6 flex flex-wrap gap-4">
+                        <select id="device-filter" class="input-field">
+                            <option value="all">All Devices</option>
+                        </select>
+                        <select id="severity-filter" class="input-field">
+                            <option value="all">All Severities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                            <option value="normal">Normal</option>
+                        </select>
+                        <select id="protocol-filter" class="input-field">
+                            <option value="all">All Protocols</option>
+                        </select>
+                        <input type="text" id="log-search" placeholder="Search logs..." class="input-field flex-grow">
+                    </div>
+                    <div class="scrollable-table">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-800/50 rounded-t-lg">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Timestamp</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Device</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Protocol</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Source IP</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Attack Type</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Message</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Severity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="log-entries" class="divide-y divide-gray-700">
+                                <!-- Log entries will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="fixed inset-0 modal-backdrop flex items-center justify-center hidden z-50">
+        <div class="glass-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="px-6 py-6 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-gray-200">📋 Forensic Analysis Report</h3>
+                <button id="close-report" class="text-gray-400 hover:text-gray-200 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="report-content" class="p-6">
+                <!-- Report content will be inserted here -->
+            </div>
+            <div class="px-6 py-6 border-t border-gray-700 flex justify-end">
+                <button id="download-report" class="btn-primary">
+                    📥 Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/camera-integration.js"></script>
+    <script>
+        // Database Simulation
+        const db = {
+            users: [
+                { id: 1, name: "Admin", email: "admin@iot.com", password: "admin123" }
+            ],
+            logs: [],
+            devices: ["Traffic Camera", "Environmental Sensor", "Smart Streetlight", "Surveillance Camera", "Traffic Signal"],
+            attackTypes: ["DDoS", "DoS", "Data Exfiltration", "Keylogging", "OS Scan", "Brute Force", "SQL Injection", "XSS", "Man-in-the-Middle", "Port Scanning", "Firmware Tampering"],
+            iotProtocols: ["MQTT", "CoAP", "HTTP", "AMQP", "LoRaWAN"]
+        };
+
+        // Load data from the API and simulate real-time updates
+        async function loadLogData() {
+            try {
+                // Try to load from API first
+                try {
+                    const response = await fetch('/api/logs');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.data && data.data.length > 0) {
+                            db.logs = data.data;
+                            updateDashboard();
+                            updateLogTable();
+                            initCharts();
+                            startRealTimeUpdates();
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log("API not available, using sample data");
+                }
+
+                // Fallback to sample data
+                db.logs = [
+                    { timestamp: new Date(Date.now() - 86400000), device: "Traffic Camera", type: "Connection", message: "Device scanning for open ports", severity: "high", attackType: "OS Scan", protocol: "MQTT", sourceIP: "192.168.1.100" },
+                    { timestamp: new Date(Date.now() - 7200000), device: "Environmental Sensor", type: "Data", message: "Unusual data transfer pattern detected", severity: "high", attackType: "Data Exfiltration", protocol: "CoAP", sourceIP: "10.0.0.25" },
+                    { timestamp: new Date(Date.now() - 3600000), device: "Smart Streetlight", type: "Alert", message: "High volume of malformed packets", severity: "high", attackType: "DDoS", protocol: "HTTP", sourceIP: "172.16.0.50" },
+                    { timestamp: new Date(Date.now() - 1800000), device: "Surveillance Camera", type: "Error", message: "Multiple authentication failures", severity: "high", attackType: "Brute Force", protocol: "MQTT", sourceIP: "203.0.113.42" },
+                    { timestamp: new Date(Date.now() - 900000), device: "Traffic Signal", type: "Alert", message: "Unauthorized command injection attempt", severity: "high", attackType: "Command Injection", protocol: "AMQP", sourceIP: "198.51.100.15" },
+                    { timestamp: new Date(Date.now() - 600000), device: "Traffic Camera", type: "Alert", message: "Keystroke patterns detected in network traffic", severity: "medium", attackType: "Keylogging", protocol: "LoRaWAN", sourceIP: "192.0.2.75" },
+                    { timestamp: new Date(Date.now() - 300000), device: "Environmental Sensor", type: "Alert", message: "Service overload detected", severity: "high", attackType: "DoS", protocol: "CoAP", sourceIP: "10.0.0.150" },
+                    { timestamp: new Date(), device: "Surveillance Camera", type: "Alert", message: "Multiple concurrent failed login attempts from same IP", severity: "high", attackType: "Brute Force", protocol: "HTTP", sourceIP: "172.16.0.200" }
+                ];
+
+                // Add more simulated log entries
+                for (let i = 0; i < 50; i++) {
+                    const hours = Math.floor(Math.random() * 24);
+                    const minutes = Math.floor(Math.random() * 60);
+                    const severity = Math.random() > 0.7 ? 
+                        (Math.random() > 0.5 ? "high" : "medium") : 
+                        (Math.random() > 0.8 ? "low" : "normal");
+
+                    db.logs.push({
+                        timestamp: new Date(Date.now() - (hours * 3600000 + minutes * 60000)),
+                        device: db.devices[Math.floor(Math.random() * db.devices.length)],
+                        type: ["Connection", "Data", "Alert", "Error", "Protocol"][Math.floor(Math.random() * 5)],
+                        protocol: db.iotProtocols[Math.floor(Math.random() * db.iotProtocols.length)],
+                        message: `[${db.attackTypes[Math.floor(Math.random() * db.attackTypes.length)]}] ${["unusual traffic pattern", "authentication failure", "protocol violation", "data exfiltration attempt", "firmware tampering"][Math.floor(Math.random() * 5)]}`,
+                        sourceIP: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                        severity: severity,
+                        attackType: db.attackTypes[Math.floor(Math.random() * db.attackTypes.length)]
+                    });
+                }
+
+                // Sort logs by timestamp
+                db.logs.sort((a, b) => b.timestamp - a.timestamp);
+
+                updateDashboard();
+                updateLogTable();
+                initCharts();
+                startRealTimeUpdates();
+            } catch (error) {
+                console.error("Error loading log data:", error);
+            }
+        }
+
+        // Real-time monitoring function
+        function startRealTimeUpdates() {
+            // Update every 10 seconds
+            setInterval(async () => {
+                try {
+                    // Simulate new log entries
+                    const newLog = {
+                        timestamp: new Date(),
+                        device: db.devices[Math.floor(Math.random()* db.devices.length)],
+                        type: ["Connection", "Data", "Alert", "Error"][Math.floor(Math.random() * 4)],
+                        protocol: db.iotProtocols[Math.floor(Math.random() * db.iotProtocols.length)],
+                        message: `Real-time event: ${["system check", "data sync", "authentication", "protocol update"][Math.floor(Math.random() * 4)]}`,
+                        sourceIP: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                        severity: Math.random() > 0.8 ? "high" : Math.random() > 0.6 ? "medium" : "normal",
+                        attackType: Math.random() > 0.7 ? db.attackTypes[Math.floor(Math.random() * db.attackTypes.length)] : null
+                    };
+
+                    // Add new log to the beginning
+                    db.logs.unshift(newLog);
+
+                    // Keep only last 100 logs for performance
+                    if (db.logs.length > 100) {
+                        db.logs = db.logs.slice(0, 100);
+                    }
+
+                    // Update dashboard with new data
+                    updateDashboard();
+                    updateLogTable();
+
+                    // Show live indicator
+                    const liveIndicator = document.querySelector('.status-online');
+                    if (liveIndicator) {
+                        liveIndicator.style.animation = 'statusPulse 1s ease-out';
+                        setTimeout(() => {
+                            liveIndicator.style.animation = 'statusPulse 2s infinite';
+                        }, 1000);
+                    }
+
+                } catch (error) {
+                    console.error("Real-time update error:", error);
+                }
+            }, 10000); // Update every 10 seconds
+        }
+
+        // Authentication Functions
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const user = db.users.find(u => u.email === email && u.password === password);
+            if (user) {
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('animate-fade-in');
+                loadLogData();
+            } else {
+                alert('Invalid credentials!');
+            }
+        }
+
+        function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+
+            if (password !== confirm) {
+                alert("Passwords don't match!");
+                return;
+            }
+
+            if (db.users.some(u => u.email === email)) {
+                alert("Email already registered!");
+                return;
+            }
+
+            db.users.push({ id: db.users.length + 1, name, email, password });
+            alert("Account created successfully! Please login.");
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
+        // Dashboard Functions
+        function updateDashboard() {
+            document.getElementById('total-logs').textContent = db.logs.length;
+            document.getElementById('anomalies').textContent = db.logs.filter(log => log.severity !== 'normal').length;
+            document.getElementById('devices-count').textContent = db.devices.length;
+        }
+
+        function updateLogTable(filter = null) {
+            const logEntries = document.getElementById('log-entries');
+            logEntries.innerHTML = '';
+
+            const deviceFilter = document.getElementById('device-filter').value;
+            const severityFilter = document.getElementById('severity-filter').value;
+            const protocolFilter = document.getElementById('protocol-filter').value;
+            const searchQuery = document.getElementById('log-search').value.toLowerCase();
+
+            let filteredLogs = db.logs;
+            if (deviceFilter !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.device === deviceFilter);
+            }
+            if (severityFilter !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.severity === severityFilter);
+            }
+            if (protocolFilter !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.protocol === protocolFilter);
+            }
+            if (searchQuery) {
+                filteredLogs = filteredLogs.filter(log => 
+                    log.device.toLowerCase().includes(searchQuery) || 
+                    log.type.toLowerCase().includes(searchQuery) || 
+                    log.message.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            filteredLogs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = `log-entry ${log.severity !== 'normal' ? 'anomaly' : 'normal'}`;
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        ${log.timestamp.toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">
+                        ${log.device}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        ${log.protocol}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        ${log.sourceIP}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        ${log.attackType || 'Normal'}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">
+                        ${log.message}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full severity-${log.severity}">
+                            ${log.severity.charAt(0).toUpperCase() + log.severity.slice(1)}
+                        </span>
+                    </td>
+                `;
+                logEntries.appendChild(row);
+            });
+        }
+
+        function initCharts() {
+            // Timeline Chart
+            const timelineCtx = document.getElementById('timeline-chart').getContext('2d');
+            const hourlyCounts = Array(24).fill(0);
+            db.logs.forEach(log => {
+                const hour = log.timestamp.getHours();
+                hourlyCounts[hour]++;
+            });
+
+            new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Logs per hour',
+                        data: hourlyCounts,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#a0aec0'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#a0aec0'
+                            },
+                            grid: {
+                                color: 'rgba(160, 174, 192, 0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#a0aec0'
+                            },
+                            grid: {
+                                color: 'rgba(160, 174, 192, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Anomaly Chart
+            const anomalyCtx = document.getElementById('anomaly-chart').getContext('2d');
+            const anomalyCounts = {
+                high: db.logs.filter(log => log.severity === 'high').length,
+                medium: db.logs.filter(log => log.severity === 'medium').length,
+                low: db.logs.filter(log => log.severity === 'low').length,
+                normal: db.logs.filter(log => log.severity === 'normal').length
+            };
+
+            new Chart(anomalyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Severity', 'Medium Severity', 'Low Severity', 'Normal'],
+                    datasets: [{
+                        data: [anomalyCounts.high, anomalyCounts.medium, anomalyCounts.low, anomalyCounts.normal],
+                        backgroundColor: [
+                            '#f56565',
+                            '#ed8936',
+                            '#667eea',
+                            '#48bb78'
+                        ],
+                        borderColor: [
+                            '#fc8181',
+                            '#f6ad55',
+                            '#7c3aed',
+                            '#68d391'
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#a0aec0',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateReport() {
+            const reportContent = document.getElementById('report-content');
+            reportContent.innerHTML = `
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Smart City IoT Forensic Analysis Report</h1>
+                    <p class="text-gray-400">Generated on: ${new Date().toLocaleString()}</p>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-200">Executive Summary</h2>
+                    <div class="grid grid-cols-2 gap-6 mb-4">
+                        <div class="stat-card">
+                            <p class="font-medium text-gray-300">Total Logs Analyzed:</p>
+                            <p class="text-2xl font-bold text-blue-400">${db.logs.length}</p>
+                        </div>
+                        <div class="stat-card">
+                            <p class="font-medium text-gray-300">Time Period:</p>
+                            <p class="text-lg text-gray-200">${db.logs[db.logs.length-1].timestamp.toLocaleDateString()} to ${db.logs[0].timestamp.toLocaleDateString()}</p>
+                        </div>
+                        <div class="stat-card">
+                            <p class="font-medium text-gray-300">Devices Monitored:</p>
+                            <p class="text-2xl font-bold text-green-400">${db.devices.length}</p>
+                        </div>
+                        <div class="stat-card">
+                            <p class="font-medium text-gray-300">Security Incidents:</p>
+                            <p class="text-2xl font-bold text-red-400">${db.logs.filter(log => log.severity !== 'normal').length}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-200">Key Findings</h2>
+                    <div class="glass-card rounded-xl p-6">
+                        <ul class="list-disc pl-5 space-y-3 text-gray-300">
+                            <li>${db.logs.filter(log => log.severity === 'high').length} high severity security events detected</li>
+                            <li>Most common device issues: ${db.logs.filter(log => log.type === 'Error').length} errors reported</li>
+                            <li>Peak log activity detected during analysis period</li>
+                            <li>Multiple attack vectors identified across IoT infrastructure</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-200">Recommendations</h2>
+                    <div class="glass-card rounded-xl p-6">
+                        <ol class="list-decimal pl-5 space-y-3 text-gray-300">
+                            <li>Immediate investigation of high severity alerts required</li>
+                            <li>Review and strengthen device access controls</li>
+                            <li>Implement additional monitoring for frequently compromised devices</li>
+                            <li>Schedule maintenance for devices reporting firmware issues</li>
+                            <li>Enhance network segmentation for IoT devices</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-200">Recent Security Events</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full glass-card rounded-xl">
+                            <thead class="bg-gray-800/50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Timestamp</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Device</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Severity</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${db.logs.slice(0, 10).map(log => `
+                                    <tr class="hover:bg-gray-800/30">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${log.timestamp.toLocaleString()}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">${log.device}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-3 py-1 text-xs font-semibold rounded-full severity-${log.severity}">
+                                                ${log.severity.charAt(0).toUpperCase() + log.severity.slice(1)}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-300">${log.message}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function downloadPDF() {
+            alert('PDF generation would be implemented in a production environment using a library like jsPDF or a server-side component.');
+        }
+
+        // Tab switching functionality
+        function switchDeviceTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.device-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active-tab');
+            });
+
+            // Show selected tab content
+            const selectedContent = document.getElementById(`${tabName}-tab-content`);
+            if (selectedContent) {
+                selectedContent.classList.remove('hidden');
+            }
+
+            // Add active class to selected tab
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            if (selectedTab) {
+                selectedTab.classList.add('active-tab');
+            }
+
+            // Update device counts when switching to overview
+            if (tabName === 'overview') {
+                updateDeviceCounts();
+            }
+        }
+
+        // Update device counts for overview tab
+        function updateDeviceCounts() {
+            const allDevices = [
+                ...Object.entries(sensorManager.sensors).map(([id, device]) => ({
+                    id, ...device, type: 'sensor'
+                })),
+                ...Object.entries(cameraManager.cameras).map(([id, device]) => ({
+                    id, ...device, type: 'camera', status: device.is_connected ? 'online' : 'offline'
+                }))
+            ];
+
+            const totalDevices = allDevices.length;
+            const onlineDevices = allDevices.filter(device => device.status === 'online').length;
+            const offlineDevices = totalDevices - onlineDevices;
+            const alertsCount = allDevices.filter(device => device.severity && device.severity !== 'normal').length;
+
+            // Update the counters
+            const totalElement = document.getElementById('total-devices-count');
+            const onlineElement = document.getElementById('online-devices-count');
+            const offlineElement = document.getElementById('offline-devices-count');
+            const alertsElement = document.getElementById('alerts-count');
+
+            if (totalElement) totalElement.textContent = totalDevices;
+            if (onlineElement) onlineElement.textContent = onlineDevices;
+            if (offlineElement) offlineElement.textContent = offlineDevices;
+            if (alertsElement) alertsElement.textContent = alertsCount;
+        }
+
+        // Additional control functions
+        function exportDeviceData() {
+            const allDevices = [
+                ...Object.entries(sensorManager.sensors).map(([id, device]) => ({
+                    id, ...device, type: 'sensor'
+                })),
+                ...Object.entries(cameraManager.cameras).map(([id, device]) => ({
+                    id, ...device, type: 'camera'
+                }))
+            ];
+
+            const dataStr = JSON.stringify(allDevices, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `device_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            sensorManager.showNotification('Device data exported successfully!', 'success');
+        }
+
+        function systemHealthCheck() {
+            sensorManager.showNotification('Running system health check...', 'info');
+            
+            setTimeout(() => {
+                const totalDevices = Object.keys(sensorManager.sensors).length + Object.keys(cameraManager.cameras).length;
+                const onlineDevices = Object.values(sensorManager.sensors).filter(s => s.status === 'online').length + 
+                                     Object.values(cameraManager.cameras).filter(c => c.is_connected).length;
+                
+                const healthScore = totalDevices > 0 ? Math.round((onlineDevices / totalDevices) * 100) : 100;
+                
+                sensorManager.showNotification(
+                    `System Health: ${healthScore}% - ${onlineDevices}/${totalDevices} devices online`, 
+                    healthScore > 80 ? 'success' : healthScore > 50 ? 'warning' : 'error'
+                );
+            }, 2000);
+        }
+
+        function bulkDeviceOperation() {
+            sensorManager.showNotification('Bulk operations feature coming soon!', 'info');
+        }
+
+        function scheduleMaintenance() {
+            sensorManager.showNotification('Maintenance scheduling feature coming soon!', 'info');
+        }
+
+        function openDetailedLogs() {
+            const newWindow = window.open('logs.html', '_blank', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+            
+            // Optional: Pass current filter values to the new window
+            newWindow.addEventListener('load', () => {
+                // You can pass current filters or logs data here if needed
+                if (newWindow.loadLogs) {
+                    newWindow.loadLogs();
+                }
+            });
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize device filter options
+            const deviceFilter = document.getElementById('device-filter');
+            db.devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device;
+                option.textContent = device;
+                deviceFilter.appendChild(option);
+            });
+            
+            // Add IP Camera option
+            const cameraOption = document.createElement('option');
+            cameraOption.value = 'IP Camera';
+            cameraOption.textContent = 'IP Camera';
+            deviceFilter.appendChild(cameraOption);
+
+            const protocolFilter = document.getElementById('protocol-filter');
+            db.iotProtocols.forEach(protocol => {
+                const option = document.createElement('option');
+                option.value = protocol;
+                option.textContent = protocol;
+                protocolFilter.appendChild(option);
+            });
+
+            // Authentication events
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('signup-btn').addEventListener('click', handleSignup);
+            document.getElementById('show-signup').addEventListener('click', () => {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('signup-form').classList.remove('hidden');
+            });
+            document.getElementById('show-login').addEventListener('click', () => {
+                document.getElementById('signup-form').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
+            });
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                document.getElementById('app-container').classList.add('hidden');
+                document.getElementById('auth-container').classList.remove('hidden');
+            });
+
+            // Log filter events
+            document.getElementById('device-filter').addEventListener('change', () => updateLogTable());
+            document.getElementById('severity-filter').addEventListener('change', () => updateLogTable());
+            document.getElementById('protocol-filter').addEventListener('change', () => updateLogTable());
+            document.getElementById('log-search').addEventListener('input', () => updateLogTable());
+
+            // Report events
+            document.getElementById('generate-report').addEventListener('click', generateReport);
+            document.getElementById('close-report').addEventListener('click', () => {
+                document.getElementById('report-modal').classList.add('hidden');
+            });
+            document.getElementById('download-report').addEventListener('click', downloadPDF);
+
+            // Auto-login for demo purposes
+            document.getElementById('login-email').value = 'admin@iot.com';
+            document.getElementById('login-password').value = 'admin123';
+        });
+    </script>
+</body>
+</html>
